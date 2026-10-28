@@ -1,0 +1,67 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: nexo
+      POSTGRES_USER: nexo
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD}
+    volumes: [postgres:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U nexo]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+  app:
+    build: .
+    environment:
+      DATABASE_URL: postgresql://nexo:${POSTGRES_PASSWORD}@db:5432/nexo
+      APP_ORIGIN: https://${DOMAIN:?Set DOMAIN}
+      NODE_ENV: production
+      TURN_SECRET: ${TURN_SECRET:?Set TURN_SECRET}
+      TURN_URL: ${TURN_URL:?Set TURN_URL}
+      STUN_URL: ${STUN_URL:-stun:stun.l.google.com:19302}
+      SMTP_URL: ${SMTP_URL:-}
+      MAIL_FROM: ${MAIL_FROM:-noreply@example.com}
+    depends_on:
+      db: {condition: service_healthy}
+    restart: unless-stopped
+  caddy:
+    image: caddy:2-alpine
+    environment:
+      DOMAIN: ${DOMAIN}
+    ports: ['80:80', '443:443', '443:443/udp']
+    volumes: ['./deploy/Caddyfile:/etc/caddy/Caddyfile:ro', 'caddy_data:/data', 'caddy_config:/config']
+    depends_on: [app]
+    restart: unless-stopped
+  turn:
+    image: coturn/coturn:4.7.0
+    # Host networking is needed for a routable relay range. Deploy on a Linux host.
+    network_mode: host
+    command:
+      - -n
+      - --log-file=stdout
+      - --listening-port=3478
+      - --min-port=49160
+      - --max-port=49200
+      - --fingerprint
+      - --use-auth-secret
+      - --static-auth-secret=${TURN_SECRET}
+      - --realm=${TURN_REALM}
+      - --external-ip=${TURN_PUBLIC_IP}
+      - --no-cli
+      - --no-multicast-peers
+      - --no-tls
+      - --no-dtls
+      - --denied-peer-ip=10.0.0.0-10.255.255.255
+      - --denied-peer-ip=172.16.0.0-172.31.255.255
+      - --denied-peer-ip=192.168.0.0-192.168.255.255
+      - --denied-peer-ip=169.254.0.0-169.254.255.255
+      - --denied-peer-ip=127.0.0.0-127.255.255.255
+      - --user-quota=12
+      - --total-quota=120
+    restart: unless-stopped
+volumes:
+  postgres:
+  caddy_data:
+  caddy_config:

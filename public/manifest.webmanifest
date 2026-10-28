@@ -1,0 +1,39 @@
+{
+  "id": "/",
+  "name": "Nexo — Chamadas & Espelhamento de Tela",
+  "short_name": "Nexo",
+  "description": "Aplicativo de chamadas de voz e vídeo privadas, chat em tempo real e compartilhamento de tela em alta definição.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#111217",
+  "theme_color": "#111217",
+  "orientation": "any",
+  "categories": ["communication", "social", "productivity"],
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/pwa-maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "name": "Nexo — Chamadas & Espelhamento de Tela",
+  "description": "Aplicativo completo de chamadas de voz e vídeo privadas, chat em tempo real e compartilhamento de tela em alta definição com WebRTC.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "display-capture"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
+

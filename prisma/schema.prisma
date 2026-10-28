@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String    @id @default(uuid())
+  handle    String    @unique
+  email     String    @unique
+  password  String
+  name      String
+  avatar    String    @default("#9b8cff")
+  photo     String?
+  status    String    @default("online")
+  createdAt DateTime  @default(now())
+  sessions  Session[]
+}
+
+model Session {
+  token   String   @id
+  userId  String
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expires DateTime
+}
+
+model Reset {
+  token   String   @id
+  userId  String
+  expires DateTime
+}
+
+model Relation {
+  id        String   @id @default(uuid())
+  fromId    String
+  toId      String
+  state     String
+  createdAt DateTime @default(now())
+
+  @@unique([fromId, toId])
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  fromId    String
+  toId      String
+  text      String
+  createdAt DateTime @default(now())
+
+  @@index([fromId, toId, createdAt])
+}
+
+model Call {
+  id         String    @id @default(uuid())
+  fromId     String
+  toId       String
+  video      Boolean
+  state      String    @default("ringing")
+  createdAt  DateTime  @default(now())
+  answeredAt DateTime?
+  endedAt    DateTime?
+}
