@@ -18,3 +18,9 @@ Rodadas anteriores falharam: uma sofreu atualização do schema durante execuç�
 Não executado: HTTPS público/ACME, SMTP real, TURN público/relay forçado, carga, Safari/Firefox, iOS/Android físicos, captura de áudio do sistema em cada plataforma, qualidade 4K/60 FPS ou testes de duração prolongada. O build da imagem não equivale ao teste completo do Compose em produção. Não foi feita publicação externa.
 
 Capturas: `docs/screenshots/welcome.png` e `docs/screenshots/mobile.png`.
+
+## Continuação iOS / regressão web — 29/10/2026
+
+Ambiente Linux: Node 24.19.0/npm 11.9.0. Corrigido o peer esbuild para `^0.28.0`, compatível com Vite 8, e regenerado o lock. `npm ci`, `npm run build` e `npm run lint` passaram. PostgreSQL 17 temporário em container local, schema aplicado via `prisma db push`; `npx vitest run`: **1 arquivo, 8 testes aprovados**, cobrindo identidade/@, login/sessão, autorização/origem, amizades, mensagens, sinalização/reconexão e bloqueio. O banco temporário foi removido após os testes. Não foram usadas contas de produção.
+
+Validação nativa macOS, resultados/falhas e limites em `ios/VALIDATION.md`. Esses testes de backend não comprovam mídia WebRTC nem transmissão ReplayKit em iPhone físico.

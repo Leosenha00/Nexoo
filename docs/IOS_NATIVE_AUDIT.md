@@ -16,3 +16,13 @@ Base: branch `ios-native-preparation`, revisão inicial `8a345bd`. Não foi nece
 | Captura | `src/media.ts`, `ios/BroadcastExtension/SampleHandler.swift` | APIs de mídia do navegador não são portáveis para Swift. ReplayKit esqueleto não publica mídia, backend não tem ingestão RTMP. Exige implementação WebRTC nativa e teste físico. |
 
 Aproveitamento imediato: cliente web intacto e acessível na folha WKWebView; configuração de origem centralizada e validada; contratos acima orientam login/Socket.IO/WebRTC futuros. Não foi afirmada paridade de mídia do WKWebView nem conectividade do serviço remoto. A primeira entrega é a base SwiftUI compilável com teste de entrada e configuração, não uma implementação nativa de todas as funções.
+
+## Continuação de 29/10/2026
+
+Inspecionadas `main` e `ios-native-preparation` após fetch. São as únicas branches remotas listadas; não havia PRs abertos ou fechados. A árvore local estava limpa antes da continuação, e os commits anteriores já estavam enviados. `main` ainda tinha o scaffold WebView/ReplayKit e pipeline antigo; o trabalho nativo anterior estava na branch de preparação e foi continuado.
+
+As APIs acima agora têm consumidor Swift (`Native/APIClient.swift`, `SessionStore.swift`, `AccountView.swift`), com Origin, Bearer, Keychain e erros reais. Chamadas foreground têm implementação nativa em `CallController.swift` usando os mesmos eventos/acknowledgements e ordem dos quatro transceivers do web. Não houve alteração de rotas, schemas ou funções web/backend. A correção web limita-se a compatibilizar esbuild e regenerar lock para permitir instalação/build/testes.
+
+Os testes HTTP Swift usam URLProtocol injetado para verificar contratos sem criar contas no serviço de produção. Os testes de integração existentes rodaram contra PostgreSQL temporário real e Socket.IO real local, cobrindo identidade/exclusividade, login/sessão, autorização/origem, amizades, mensagens, chamada/sinalização/reconexão e bloqueio. Eles não comprovam transporte de mídia WebRTC ou execução SwiftUI em aparelho físico.
+
+Configuração adicional encontrada na auditoria: `.env.example` indicava SQLite apesar do schema PostgreSQL; o exemplo foi corrigido para PostgreSQL, sem alterar variáveis de qualquer serviço implantado. `bun.lock` já estava divergente do manifest em dependências como Express/cookie antes desta continuação; README/Docker usam npm, e o lock validado nesta entrega é `package-lock.json`. Bun não foi executado nem declarado validado.
