@@ -91,3 +91,7 @@ Os testes usam um banco PostgreSQL real configurado em DATABASE_URL. Use banco d
 - PWA com ícone SVG; alguns sistemas Apple exigem PNG/apple-touch-icon para melhor integração.
 - Sem auditoria de segurança externa, testes de carga ou garantia de disponibilidade. Chat é protegido por TLS e autorização, mas armazenado em texto no banco; não se apresenta como chat ponta a ponta.
 - Interface responsiva com CSS próprio (sem Tailwind), ícones Lucide. Fontes Google são opcionais; o fallback local funciona sem acesso externo.
+
+## Cliente iOS nativo
+
+A continuação incremental em SwiftUI, autenticação nativa, amizades e implementação inicial WebRTC está documentada em [ios/README.md](ios/README.md). O cliente web permanece disponível. Consulte [validação real macOS](ios/VALIDATION.md), [arquivos da entrega](docs/IOS_DELIVERY_FILES.md) e [instalação usando somente iPhone](docs/IOS_INSTALLATION.md). Compilação de simulador não gera aplicativo instalável no iPhone; publicação ReplayKit e testes físicos continuam pendentes.

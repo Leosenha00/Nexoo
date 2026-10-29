@@ -1,0 +1,15 @@
+# Optional preparation only. Requires compatible Apple profiles; does not enable publishing.
+include:
+  - project.yml
+settings:
+  base:
+    NEXOO_APP_GROUP: group.$(NEXOO_BUNDLE_ID)
+targets:
+  Nexoo:
+    settings:
+      base:
+        CODE_SIGN_ENTITLEMENTS: Entitlements/AppGroups.entitlements
+  NexooBroadcast:
+    settings:
+      base:
+        CODE_SIGN_ENTITLEMENTS: Entitlements/AppGroups.entitlements

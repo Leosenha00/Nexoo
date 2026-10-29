@@ -6,3 +6,16 @@ coverage/
 *.log
 .env*
 !.env.example
+ios/Generated/
+ios/DerivedData/
+ios/results/
+ios/*.xcodeproj/
+ios/signed-output/
+__pycache__/
+# Apple signing material belongs in local secure storage / CI secrets.
+*.p12
+*.p8
+*.mobileprovision
+*.provisionprofile
+*.ipa
+*.xcarchive/
