@@ -28,6 +28,7 @@ targets:
       - NexooApp.swift
       - AppConfiguration.swift
       - Native
+      - Assets.xcassets
     info:
       path: Generated/NexooInfo.plist
       properties:
@@ -41,6 +42,9 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: $(NEXOO_BUNDLE_ID)
+        PROVISIONING_PROFILE_SPECIFIER: $(NEXOO_APP_PROFILE)
+        CODE_SIGN_ENTITLEMENTS: Entitlements/App.entitlements
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         TARGETED_DEVICE_FAMILY: "1"
   NexooBroadcast:
     type: app-extension
@@ -59,6 +63,8 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: $(NEXOO_BUNDLE_ID).broadcast
+        PROVISIONING_PROFILE_SPECIFIER: $(NEXOO_BROADCAST_PROFILE)
+        CODE_SIGN_ENTITLEMENTS: Entitlements/Broadcast.entitlements
         APPLICATION_EXTENSION_API_ONLY: YES
         TARGETED_DEVICE_FAMILY: "1"
   NexooTests:

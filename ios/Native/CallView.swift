@@ -24,6 +24,7 @@ struct CallView: View {
     var body: some View {
         VStack(spacing: 16) {
             Text(call.state)
+            if call.callID != nil { Text("Limite de vídeo: \(call.videoBitrate / 1000) kbps").font(.caption) }
             if let error = call.error { Text(error).foregroundStyle(.red) }
             if let incoming = call.incoming {
                 Text("Chamada de \((incoming["user"] as? [String: Any])?["name"] as? String ?? "amigo")")

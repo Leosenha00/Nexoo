@@ -10,3 +10,5 @@ ios/Generated/
 ios/DerivedData/
 ios/results/
 ios/*.xcodeproj/
+ios/signed-output/
+__pycache__/

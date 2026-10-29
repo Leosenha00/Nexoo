@@ -12,6 +12,8 @@ final class CallController: NSObject, ObservableObject {
     @Published var remoteVideo: RTCVideoTrack?
     @Published var remoteScreen: RTCVideoTrack?
     @Published var error: String?
+    @Published var videoBitrate = 1_200_000
+    private var statsTimer: Timer?
     private let api: APIClient
     private var manager: SocketManager?
     private var socket: SocketIOClient? { manager?.defaultSocket }
@@ -68,6 +70,7 @@ final class CallController: NSObject, ObservableObject {
         socket.emitWithAck(event, data).timingOut(after: 10) { [weak self] values in
             guard let result = values.first as? [String: Any], result["ok"] as? Bool == true else {
                 self?.error = (values.first as? [String: Any])?["error"] as? String ?? "Sem resposta do servidor"
+                if event == "call:start" { self?.close() }
                 return
             }
             completion(result["data"] as? [String: Any] ?? [:])
@@ -107,7 +110,9 @@ final class CallController: NSObject, ObservableObject {
     func mute(_ muted: Bool) { localAudio?.isEnabled = !muted }
     @MainActor private func prepare(video: Bool) async throws {
         guard await AVCaptureDevice.requestAccess(for: .audio) else { throw APIError(status: 0, message: "Permita o microfone nos Ajustes.") }
-        if video && !(await AVCaptureDevice.requestAccess(for: .video)) { throw APIError(status: 0, message: "Permita a câmera nos Ajustes.") }
+        if video {
+            guard await AVCaptureDevice.requestAccess(for: .video) else { throw APIError(status: 0, message: "Permita a câmera nos Ajustes.") }
+        }
         let ice: ICEConfiguration = try await api.request("ice")
         let configuration = RTCConfiguration()
         configuration.sdpSemantics = .unifiedPlan
@@ -130,12 +135,36 @@ final class CallController: NSObject, ObservableObject {
             if let device = RTCCameraVideoCapturer.captureDevices().first(where: { $0.position == .front }),
                let format = RTCCameraVideoCapturer.supportedFormats(for: device).filter({ CMVideoFormatDescriptionGetDimensions($0.formatDescription).width <= 1280 }).last {
                 let fps = min(30, Int(format.videoSupportedFrameRateRanges.map(\.maxFrameRate).max() ?? 30))
-                capturer.startCapture(with: device, format: format, fps: fps)
+                try await capturer.startCapture(with: device, format: format, fps: fps)
             } else { throw APIError(status: 0, message: "Câmera não disponível neste dispositivo") }
         } else { _ = pc.addTransceiver(of: .video, init: config) }
         // Match web ordering: microphone, camera, screen video, screen audio.
         _ = pc.addTransceiver(of: .video, init: config)
         _ = pc.addTransceiver(of: .audio, init: config)
+        statsTimer?.invalidate()
+        statsTimer = Timer.scheduledTimer(withTimeInterval: 5, repeats: true) { [weak self] _ in self?.adaptVideo() }
+    }
+    private func adaptVideo() {
+        guard let pc = peer else { return }
+        pc.statistics { [weak self] report in
+            DispatchQueue.main.async {
+                guard let self, self.peer === pc else { return }
+                let reports = report.statistics.values.filter { $0.type == "remote-inbound-rtp" }
+                guard !reports.isEmpty else { return }
+                let loss = reports.compactMap { ($0.values["fractionLost"] as? NSNumber)?.doubleValue }.max() ?? 0
+                let rtt = reports.compactMap { ($0.values["roundTripTime"] as? NSNumber)?.doubleValue }.max() ?? 0
+                self.videoBitrate = VideoQualityPolicy.nextBitrate(current: self.videoBitrate, loss: loss, rtt: rtt)
+                for sender in pc.senders where sender.track?.kind == "video" {
+                    let parameters = sender.parameters
+                    for encoding in parameters.encodings {
+                        encoding.maxBitrateBps = NSNumber(value: self.videoBitrate)
+                        encoding.maxFramerate = NSNumber(value: self.videoBitrate < 500_000 ? 15 : 30)
+                        encoding.scaleResolutionDownBy = NSNumber(value: self.videoBitrate < 500_000 ? 2.0 : 1.0)
+                    }
+                    sender.parameters = parameters
+                }
+            }
+        }
     }
     private func offer(restart: Bool = false) {
         guard let pc = peer, pc.signalingState == .stable else { return }
@@ -176,6 +205,7 @@ final class CallController: NSObject, ObservableObject {
         }
     }
     private func close() {
+        statsTimer?.invalidate(); statsTimer = nil
         capturer?.stopCapture(); capturer = nil
         peer?.close(); peer = nil; localAudio = nil; pending = []
         remoteVideo = nil; remoteScreen = nil; callID = nil; incoming = nil; state = "Conectado"
