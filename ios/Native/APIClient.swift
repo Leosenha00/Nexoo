@@ -24,6 +24,11 @@ struct APIError: LocalizedError {
 /// Injectable URLSession keeps transport tests isolated from production accounts.
 final class APIClient {
     let baseURL: URL
+    var origin: String {
+        var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false)!
+        components.path = ""; components.query = nil; components.fragment = nil
+        return components.string!
+    }
     let session: URLSession
     var token: String?
     init(baseURL: URL, session: URLSession? = nil) {
@@ -40,9 +45,7 @@ final class APIClient {
         request.httpMethod = method
         request.timeoutInterval = 25
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        var origin = URLComponents(url: baseURL, resolvingAgainstBaseURL: false)!
-        origin.path = ""; origin.query = nil; origin.fragment = nil
-        request.setValue(origin.string, forHTTPHeaderField: "Origin")
+        request.setValue(origin, forHTTPHeaderField: "Origin")
         if let token { request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") }
         if let body { request.httpBody = try JSONEncoder().encode(body) }
         let (data, response) = try await session.data(for: request)

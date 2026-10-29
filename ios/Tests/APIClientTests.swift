@@ -17,7 +17,7 @@ final class StubProtocol: URLProtocol {
 final class APIClientTests: XCTestCase {
     private func client() -> APIClient {
         let config = URLSessionConfiguration.ephemeral; config.protocolClasses = [StubProtocol.self]
-        return APIClient(baseURL: URL(string: "https://example.com")!, session: URLSession(configuration: config))
+        return APIClient(baseURL: URL(string: "https://example.com/")!, session: URLSession(configuration: config))
     }
     override func tearDown() { StubProtocol.handler = nil; super.tearDown() }
     func testNativeMutationUsesBearerAndAllowedOrigin() async throws {

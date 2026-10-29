@@ -30,7 +30,7 @@ final class CallController: NSObject, ObservableObject {
     func connect(userID: String) {
         guard manager == nil, let token = api.token else { return }
         self.userID = userID
-        let manager = SocketManager(socketURL: api.baseURL, config: [.log(false), .compress, .forceWebsockets(true), .reconnects(true), .reconnectWait(2), .connectParams(["token": token]), .extraHeaders(["Authorization": "Bearer \(token)", "Origin": api.baseURL.absoluteString])])
+        let manager = SocketManager(socketURL: api.baseURL, config: [.log(false), .compress, .forceWebsockets(true), .reconnects(true), .reconnectWait(2), .connectParams(["token": token]), .extraHeaders(["Authorization": "Bearer \(token)", "Origin": api.origin])])
         self.manager = manager
         let socket = manager.defaultSocket
         socket.on(clientEvent: .connect) { [weak self] _, _ in
@@ -66,7 +66,11 @@ final class CallController: NSObject, ObservableObject {
         close(); manager?.disconnect(); manager = nil; state = "Desconectado"
     }
     private func emit(_ event: String, _ data: [String: Any], completion: @escaping ([String: Any]) -> Void) {
-        guard let socket, socket.status == .connected else { error = "Sinalização desconectada"; return }
+        guard let socket, socket.status == .connected else {
+            error = "Sinalização desconectada"
+            if event == "call:start" { close() }
+            return
+        }
         socket.emitWithAck(event, data).timingOut(after: 10) { [weak self] values in
             guard let result = values.first as? [String: Any], result["ok"] as? Bool == true else {
                 self?.error = (values.first as? [String: Any])?["error"] as? String ?? "Sem resposta do servidor"
@@ -171,14 +175,18 @@ final class CallController: NSObject, ObservableObject {
         let constraints = RTCMediaConstraints(mandatoryConstraints: restart ? ["IceRestart": "true"] : nil, optionalConstraints: nil)
         pc.offer(for: constraints) { [weak self] sdp, error in
             if let error { DispatchQueue.main.async { self?.error = error.localizedDescription }; return }
-            if let sdp { self?.localDescription(sdp) }
+            if let sdp { self?.localDescription(sdp, for: pc) }
         }
     }
-    private func localDescription(_ description: RTCSessionDescription) {
-        peer?.setLocalDescription(description) { [weak self] error in
-            DispatchQueue.main.async {
-                guard let self, error == nil, let id = self.callID else { return }
-                self.emit("signal", ["id": id, "description": ["type": description.type == .offer ? "offer" : "answer", "sdp": description.sdp]]) { _ in }
+    private func localDescription(_ description: RTCSessionDescription, for pc: RTCPeerConnection) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self, self.peer === pc, let id = self.callID else { return }
+            pc.setLocalDescription(description) { [weak self] error in
+                DispatchQueue.main.async {
+                    guard let self, self.peer === pc, self.callID == id else { return }
+                    if let error { self.error = error.localizedDescription; return }
+                    self.emit("signal", ["id": id, "description": ["type": description.type == .offer ? "offer" : "answer", "sdp": description.sdp]]) { _ in }
+                }
             }
         }
     }
@@ -194,7 +202,7 @@ final class CallController: NSObject, ObservableObject {
                     self.pending.forEach { pc.add($0, completionHandler: { _ in }) }; self.pending = []
                     if type == .offer {
                         pc.answer(for: RTCMediaConstraints(mandatoryConstraints: nil, optionalConstraints: nil)) { [weak self] answer, _ in
-                            if let answer { self?.localDescription(answer) }
+                            if let answer { self?.localDescription(answer, for: pc) }
                         }
                     }
                 }
@@ -228,7 +236,7 @@ extension CallController: RTCPeerConnectionDelegate {
     func peerConnection(_ peerConnection: RTCPeerConnection, didChange newState: RTCIceGatheringState) {}
     func peerConnection(_ peerConnection: RTCPeerConnection, didGenerate candidate: RTCIceCandidate) {
         DispatchQueue.main.async { [weak self] in
-            guard let self, let id = self.callID else { return }
+            guard let self, self.peer === peerConnection, let id = self.callID else { return }
             self.emit("signal", ["id": id, "candidate": ["candidate": candidate.sdp, "sdpMLineIndex": candidate.sdpMLineIndex, "sdpMid": candidate.sdpMid ?? ""]]) { _ in }
         }
     }
