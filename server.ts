@@ -17,7 +17,7 @@ if (!isProd) {
   server.app.use(vite.middlewares);
 } else {
   server.app.use(express.static(path.resolve("dist")));
-  server.app.get("*", (_req, res) => {
+  server.app.get("/{*path}", (_req, res) => {
     res.sendFile(path.resolve("dist/index.html"));
   });
 }
