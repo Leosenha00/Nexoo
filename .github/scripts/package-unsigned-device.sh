@@ -13,7 +13,7 @@ for bundle in "$APP" "$EXT"; do
   test "$PLATFORM" = iPhoneOS
   test -x "$bundle/$EXECUTABLE"
   xcrun lipo -archs "$bundle/$EXECUTABLE" | tee -a unsigned-output/device-validation.log
-  xcrun lipo -verify_arch arm64 "$bundle/$EXECUTABLE"
+  xcrun lipo "$bundle/$EXECUTABLE" -verify_arch arm64
   xcrun vtool -show-build "$bundle/$EXECUTABLE" > "$RUNNER_TEMP/nexoo-mach-o-platform.txt"
   cat "$RUNNER_TEMP/nexoo-mach-o-platform.txt" >> unsigned-output/device-validation.log
   python3 - "$RUNNER_TEMP/nexoo-mach-o-platform.txt" <<'PY'
