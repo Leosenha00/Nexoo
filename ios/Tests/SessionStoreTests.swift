@@ -7,7 +7,7 @@ final class MemoryTokens: TokenStorage {
     func write(_ token: String?) throws { self.token = token }
 }
 final class SessionStoreTests: XCTestCase {
-    private let user = #"{"id":"user-1","handle":"nexoo","name":"Nexoo","avatar":"#142b4a","status":"online"}"#
+    private let user = ##"{"id":"user-1","handle":"nexoo","name":"Nexoo","avatar":"#142b4a","status":"online"}"##
     @MainActor private func setupStore(_ storage: MemoryTokens) -> SessionStore {
         let config = URLSessionConfiguration.ephemeral; config.protocolClasses = [StubProtocol.self]
         return SessionStore(api: APIClient(baseURL: URL(string: "https://example.com")!, session: URLSession(configuration: config)), storage: storage)
