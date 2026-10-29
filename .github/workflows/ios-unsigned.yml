@@ -1,34 +1,48 @@
-name: Build iOS unsigned IPA
+name: iOS simulator validation
 on:
   workflow_dispatch:
   push:
-    paths:
-      - 'ios/**'
-      - '.github/workflows/ios-unsigned.yml'
+    branches: [ios-native-preparation]
+    paths: ['ios/**', '.github/workflows/ios-unsigned.yml']
+  pull_request:
+    paths: ['ios/**', '.github/workflows/ios-unsigned.yml']
+permissions:
+  contents: read
 jobs:
-  build:
+  simulator:
     runs-on: macos-15
-    permissions:
-      contents: read
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - name: Install XcodeGen
         run: brew install xcodegen
-      - name: Generate Xcode project
+      - name: Generate project and record toolchain
         run: |
-          cd ios
-          xcodegen generate
-      - name: Build iOS app without signing
+          mkdir -p ios/results
+          xcodebuild -version | tee ios/results/toolchain.txt
+          xcodegen --version | tee -a ios/results/toolchain.txt
+          xcodegen generate --spec ios/project.yml
+      - name: Build simulator without signing
+        shell: bash
         run: |
-          xcodebuild -project ios/Nexoo.xcodeproj -scheme Nexoo -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath "$RUNNER_TEMP/NexooDerivedData" CODE_SIGNING_ALLOWED=NO build
-      - name: Package unsigned IPA
+          set -o pipefail
+          xcodebuild -project ios/Nexoo.xcodeproj -scheme Nexoo -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath ios/DerivedData CODE_SIGNING_ALLOWED=NO build 2>&1 | tee ios/results/build.log
+      - name: Unit and UI tests
+        shell: bash
         run: |
-          mkdir -p "$RUNNER_TEMP/Payload"
-          cp -R "$RUNNER_TEMP/NexooDerivedData/Build/Products/Release-iphoneos/Nexoo.app" "$RUNNER_TEMP/Payload/"
-          cd "$RUNNER_TEMP"
-          zip -qr "$GITHUB_WORKSPACE/Nexoo-unsigned.ipa" Payload
-      - uses: actions/upload-artifact@v4
+          set -o pipefail
+          DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c 'import json,sys; d=json.load(sys.stdin); print(next(x["udid"] for devices in d["devices"].values() for x in devices if x["name"].startswith("iPhone")))')
+          xcodebuild -project ios/Nexoo.xcodeproj -scheme Nexoo -configuration Debug -destination "platform=iOS Simulator,id=$DEVICE_ID" -derivedDataPath ios/DerivedData -resultBundlePath ios/results/Tests.xcresult CODE_SIGNING_ALLOWED=NO test 2>&1 | tee ios/results/test.log
+      - name: Save logs and test results
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          name: Nexoo-unsigned-IPA
-          path: Nexoo-unsigned.ipa
+          name: ios-validation-${{ github.sha }}
+          path: ios/results/
+          if-no-files-found: warn
+      - name: Save simulator app (not installable on iPhone)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Nexoo-simulator-${{ github.sha }}
+          path: ios/DerivedData/Build/Products/Debug-iphonesimulator/Nexoo.app
           if-no-files-found: error
