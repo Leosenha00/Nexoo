@@ -1,0 +1,45 @@
+name: iPhone IPA for external signing
+on:
+  workflow_dispatch:
+  push:
+    branches: [ios-native-preparation]
+    paths: ['.github/workflows/ios-unsigned-device.yml', '.github/scripts/package-unsigned-device.sh']
+permissions:
+  contents: read
+jobs:
+  unsigned-device:
+    runs-on: macos-15
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+      - name: Select Xcode and generate project
+        run: |
+          sudo xcode-select -s /Applications/Xcode_16.4.app/Contents/Developer
+          brew install xcodegen
+          xcodegen generate --spec ios/project.yml
+          mkdir -p unsigned-output
+          xcodebuild -version | tee unsigned-output/toolchain.txt
+      - name: Compile for physical iPhone without signing
+        shell: bash
+        run: |
+          set -o pipefail
+          xcodebuild -project ios/Nexoo.xcodeproj -scheme Nexoo -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath "$RUNNER_TEMP/NexooDevice" CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build 2>&1 | tee unsigned-output/device-build.log
+      - name: Validate device binaries and package for later signing
+        run: bash .github/scripts/package-unsigned-device.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Nexoo-unsigned-device-IPA-requires-signing
+          path: |
+            unsigned-output/Nexoo-resign-required.ipa
+            unsigned-output/READ-ME.txt
+            unsigned-output/SHA256.txt
+          if-no-files-found: error
+      - name: Save build and validation logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-device-build-logs
+          path: |
+            unsigned-output/*.log
+            unsigned-output/toolchain.txt
+          if-no-files-found: warn
