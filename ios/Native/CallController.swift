@@ -34,7 +34,7 @@ final class CallController: NSObject, ObservableObject {
     func connect(userID: String) {
         guard manager == nil, let token = api.token else { return }
         self.userID = userID
-        let manager = SocketManager(socketURL: api.baseURL, config: [.log(false), .compress, .forceWebsockets(true), .reconnects(true), .reconnectWait(2), .connectParams(["token": token]), .extraHeaders(["Authorization": "Bearer \(token)", "Origin": api.origin])])
+        let manager = SocketManager(socketURL: api.baseURL, config: [.log(false), .compress, .forceWebsockets(true), .reconnects(true), .reconnectWait(2), .extraHeaders(["Authorization": "Bearer \(token)", "Origin": api.origin])])
         self.manager = manager
         let socket = manager.defaultSocket
         socket.on(clientEvent: .connect) { [weak self] _, _ in
