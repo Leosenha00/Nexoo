@@ -3,9 +3,9 @@ on:
   workflow_dispatch:
   push:
     branches: [ios-native-preparation]
-    paths: ['ios/**', '.github/workflows/ios-unsigned.yml']
+    paths: ['ios/**', '.github/workflows/ios-build.yml']
   pull_request:
-    paths: ['ios/**', '.github/workflows/ios-unsigned.yml']
+    paths: ['ios/**', '.github/workflows/ios-build.yml']
 permissions:
   contents: read
 jobs:
@@ -13,7 +13,9 @@ jobs:
     runs-on: macos-15
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+      - name: Select Xcode 16.4
+        run: sudo xcode-select -s /Applications/Xcode_16.4.app/Contents/Developer
       - name: Install XcodeGen
         run: brew install xcodegen
       - name: Generate project and record toolchain
@@ -33,6 +35,18 @@ jobs:
           set -o pipefail
           DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c 'import json,sys; d=json.load(sys.stdin); print(next(x["udid"] for devices in d["devices"].values() for x in devices if x["name"].startswith("iPhone")))')
           xcodebuild -project ios/Nexoo.xcodeproj -scheme Nexoo -configuration Debug -destination "platform=iOS Simulator,id=$DEVICE_ID" -derivedDataPath ios/DerivedData -resultBundlePath ios/results/Tests.xcresult CODE_SIGNING_ALLOWED=NO test 2>&1 | tee ios/results/test.log
+      - name: Diagnose failure
+        if: failure()
+        run: |
+          python3 ios/scripts/diagnose.py >> "$GITHUB_STEP_SUMMARY"
+      - name: Save generated project
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Nexoo-xcode-project-${{ github.sha }}
+          path: |
+            ios/Nexoo.xcodeproj
+            ios/Generated
       - name: Save logs and test results
         if: always()
         uses: actions/upload-artifact@v4

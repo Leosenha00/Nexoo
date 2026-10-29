@@ -8,13 +8,26 @@ settings:
     NEXOO_BUNDLE_ID: com.nexoo.ios
     NEXOO_SERVER_URL: https://nexoo-fv9s.onrender.com
     CODE_SIGN_STYLE: Automatic
+packages:
+  WebRTC:
+    url: https://github.com/stasel/WebRTC.git
+    exactVersion: 156.0.0
+  SocketIO:
+    url: https://github.com/socketio/socket.io-client-swift.git
+    exactVersion: 16.1.1
 targets:
   Nexoo:
     type: application
     platform: iOS
+    dependencies:
+      - package: WebRTC
+      - package: SocketIO
+      - target: NexooBroadcast
+        embed: true
     sources:
       - NexooApp.swift
       - AppConfiguration.swift
+      - Native
     info:
       path: Generated/NexooInfo.plist
       properties:
@@ -28,6 +41,25 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: $(NEXOO_BUNDLE_ID)
+        TARGETED_DEVICE_FAMILY: "1"
+  NexooBroadcast:
+    type: app-extension
+    platform: iOS
+    sources: [BroadcastExtension]
+    info:
+      path: Generated/BroadcastInfo.plist
+      properties:
+        CFBundleDisplayName: Nexoo Broadcast
+        CFBundleShortVersionString: "0.1.0"
+        CFBundleVersion: "1"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.broadcast-services-upload
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).SampleHandler
+          RPBroadcastProcessMode: RPBroadcastProcessModeSampleBuffer
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(NEXOO_BUNDLE_ID).broadcast
+        APPLICATION_EXTENSION_API_ONLY: YES
         TARGETED_DEVICE_FAMILY: "1"
   NexooTests:
     type: bundle.unit-test
