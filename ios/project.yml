@@ -1,0 +1,51 @@
+name: Nexoo
+options:
+  bundleIdPrefix: com.nexoo
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    IPHONEOS_DEPLOYMENT_TARGET: "16.0"
+targets:
+  Nexoo:
+    type: application
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources:
+      - path: NexooApp.swift
+    info:
+      path: NexooInfo.plist
+      properties:
+        CFBundleDisplayName: Nexoo
+        CFBundleShortVersionString: "0.1.0"
+        CFBundleVersion: "1"
+        UILaunchScreen: {}
+        NSCameraUsageDescription: "O Nexoo utiliza a câmera em chamadas de vídeo."
+        NSMicrophoneUsageDescription: "O Nexoo utiliza o microfone em chamadas."
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.nexoo.ios
+        GENERATE_INFOPLIST_FILE: "NO"
+        TARGETED_DEVICE_FAMILY: "1"
+    dependencies:
+      - target: NexooBroadcast
+        embed: true
+  NexooBroadcast:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "16.0"
+    sources:
+      - path: BroadcastExtension
+    info:
+      path: BroadcastInfo.plist
+      properties:
+        CFBundleDisplayName: Nexoo Broadcast
+        CFBundleShortVersionString: "0.1.0"
+        CFBundleVersion: "1"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.broadcast-services-upload
+          NSExtensionPrincipalClass: "$(PRODUCT_MODULE_NAME).SampleHandler"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.nexoo.ios.broadcast
+        GENERATE_INFOPLIST_FILE: "NO"
+        TARGETED_DEVICE_FAMILY: "1"
