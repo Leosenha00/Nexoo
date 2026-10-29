@@ -6,6 +6,7 @@ Never print profile contents, device identifiers, certificates or private keys.
 import datetime
 import hashlib
 import plistlib
+import re
 import sys
 from pathlib import Path
 
@@ -37,6 +38,8 @@ def validate(profile, bundle, team, identity, method, now):
 
 def main():
     directory, bundle, team, identity, method = sys.argv[1:]
+    if not re.fullmatch(r"[A-Za-z0-9.-]+", bundle) or not re.fullmatch(r"[A-Z0-9]{10}", team):
+        raise ValueError("Invalid bundle/team identifier format")
     root = Path(directory)
     profiles = []
     for filename, identifier in [('app', bundle), ('broadcast', bundle + '.broadcast')]:

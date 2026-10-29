@@ -21,12 +21,13 @@ jobs:
     runs-on: macos-15
     timeout-minutes: 35
     env:
-      SIGNING_DIR: ${{ runner.temp }}/nexoo-signing
       NEXOO_BUNDLE_ID: ${{ inputs.bundle_id }}
       APPLE_TEAM_ID: ${{ inputs.team_id }}
       EXPORT_METHOD: ${{ inputs.export_method }}
     steps:
       - uses: actions/checkout@v5
+      - name: Prepare temporary signing directory
+        run: echo "SIGNING_DIR=$RUNNER_TEMP/nexoo-signing" >> "$GITHUB_ENV"
       - name: Select Xcode
         run: sudo xcode-select -s /Applications/Xcode_16.4.app/Contents/Developer
       - name: Validate signing material
