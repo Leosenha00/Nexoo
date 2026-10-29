@@ -38,7 +38,7 @@ final class APIClient {
         self.session = session ?? URLSession(configuration: configuration)
     }
     func request<T: Decodable>(_ path: String, method: String = "GET", body: [String: String]? = nil) async throws -> T {
-        guard let url = URL(string: "api/" + path, relativeTo: baseURL.appendingPathComponent("/")) else {
+        guard let url = URL(string: path, relativeTo: baseURL.appendingPathComponent("api", isDirectory: true)) else {
             throw APIError(status: 0, message: "Endereço inválido")
         }
         var request = URLRequest(url: url)

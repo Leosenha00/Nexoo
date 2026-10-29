@@ -43,7 +43,9 @@ struct CallView: View {
                 Button("Encerrar", role: .destructive) { call.end() }
             }
             Text("Chamadas nativas em validação. Recebimento apenas com o app aberto. Transmissão ReplayKit ainda indisponível.").font(.caption)
-        }.padding().fullScreenCover(isPresented: $fullscreen) {
+        }.padding()
+        .onChange(of: call.callID) { _ in muted = false; call.mute(false) }
+        .fullScreenCover(isPresented: $fullscreen) {
             ZStack(alignment: .topTrailing) {
                 Color.black.ignoresSafeArea()
                 if let track = call.remoteScreen { VideoSurface(track: track).ignoresSafeArea() }
