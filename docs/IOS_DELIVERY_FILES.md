@@ -5,6 +5,8 @@ Comparação com `fec3db1`, ponto de partida desta continuação. O web/backend 
 Status Git: A criado, M modificado, R renomeado.
 
 ```text
+A	.github/workflows/ios-unsigned-device.yml
+A	.github/scripts/package-unsigned-device.sh
 M	.env.example
 R054	.github/workflows/ios-unsigned.yml	.github/workflows/ios-build.yml
 A	.github/workflows/ios-ipa.yml

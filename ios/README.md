@@ -22,7 +22,7 @@ Esses recursos de chamadas foram implementados, mas **não foram validados com m
 - Captura/mixagem de áudio do sistema e microfone na extensão, autorização de sessão compartilhada, lifecycle com app suspenso e limites de memória da extensão.
 - CallKit/PushKit/APNs e recebimento com app suspenso/encerrado: requerem integração backend e capabilities/provisionamento. Não foi habilitado background mode como substituto dessa implementação.
 - Validação física de chamadas, renegociação simultânea, mudanças de rede, dispositivos de áudio, tela cheia e qualidade sob carga. Interface de chamadas não é declarada pronta para produção.
-- Instalação em iPhone, assinatura Apple e IPA; veja [instalação sem computador](../docs/IOS_INSTALLATION.md).
+- Instalação em iPhone e assinatura Apple; o IPA sem assinatura para assinador externo tem fluxo próprio; veja [instalação sem computador](../docs/IOS_INSTALLATION.md).
 
 ## Projeto reproduzível
 
@@ -42,6 +42,8 @@ Configurações de build: `NEXOO_BUNDLE_ID` (padrão `com.nexoo.ios`), `NEXOO_SE
 Entitlements padrão são mínimos, sem grupos compartilhados ou credenciais. `project-with-app-groups.yml` é uma configuração **opcional de preparação**, com `NEXOO_APP_GROUP` configurável; requer perfis/capabilities compatíveis e não implementa transporte nem compartilhamento de sessão. Não está habilitada pelo workflow padrão e não foi validada com assinatura.
 
 ## Workflows
+
+- `.github/workflows/ios-unsigned-device.yml`: compila Release para iPhone físico **sem assinatura**, valida arm64/plataforma iOS e estrutura, remove assinaturas preexistentes e empacota `Nexoo-resign-required.ipa` para **assinatura posterior por ferramenta externa**. Não é o app de simulador e não está pronto para instalação direta. Não muda o estado pendente de ReplayKit. Veja `VALIDATION.md` para o resultado observado.
 
 - `.github/workflows/ios-build.yml`: macOS 15/Xcode 16.4, geração, dependências SPM, build de app + extensão sem assinatura, XCTest/XCUITest, testes da validação de perfis, diagnóstico e artefatos.
 - `.github/workflows/ios-ipa.yml`: dispatch manual na branch; recusa material de assinatura ausente/inválido; archive/export **com assinatura**, sem `CODE_SIGNING_ALLOWED=NO`. Métodos de dispositivo `debugging` ou `release-testing`, conforme perfis.

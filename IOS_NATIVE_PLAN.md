@@ -8,7 +8,7 @@ Objetivo: reaproveitar o Nexoo web e desenvolver cliente iOS SwiftUI com WebRTC 
 3. Criar workflow GitHub Actions em macOS para build de simulador SEM assinatura; guardar logs e artefatos.
 4. Adicionar testes de build e documentar erros reais.
 5. Depois implementar login real, chamadas WebRTC e extensão ReplayKit com App Group configurável.
-6. Só gerar IPA para dispositivo quando houver certificado e provisioning profile válidos.
+6. Exportar IPA assinado/instalável somente com certificado e provisioning profile válidos. Por instrução do usuário, também gerar separadamente IPA real de dispositivo sem assinatura para assinatura posterior por ferramenta externa, identificado como não instalável diretamente.
 
 ## Limitações
 - Runner macOS compila, mas não fornece assinatura Apple.

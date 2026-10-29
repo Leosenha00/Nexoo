@@ -1,3 +1,21 @@
+# IPA de dispositivo para assinatura posterior — 29/10/2026
+
+Por instrução do usuário, o projeto também entrega um **IPA sem assinatura como entrada para uma ferramenta externa de assinatura**. Isso não é um IPA de simulador nem uma afirmação de que a instalação já funciona.
+
+- Código de empacotamento validado: `764c89a3158acb5dfbd3e2d4a38e812a6fe902d4`.
+- [Execução 40877394686](https://github.com/Leosenha00/Nexoo/actions/runs/40877394686): **sucesso**.
+- Xcode 16.4, Release, SDK `iphoneos`, destino `generic/platform=iOS`, assinatura desabilitada explicitamente para esse pacote.
+- `BUILD SUCCEEDED`; app e extensão com executáveis **arm64**, `CFBundleSupportedPlatforms=iPhoneOS` e Mach-O `platform IOS`.
+- Assinaturas preexistentes removidas, perfis não incluídos, estrutura ZIP/Payload e executáveis verificados.
+- [Baixar o artefato contendo Nexoo-resign-required.ipa](https://github.com/Leosenha00/Nexoo/actions/runs/40877394686/artifacts/12898682468). O ZIP do GitHub também contém instruções e SHA-256 do IPA. Extraia o ZIP antes de importar o `.ipa` no assinador.
+- [Logs da compilação e validação](https://github.com/Leosenha00/Nexoo/actions/runs/40877394686/artifacts/12898981503).
+
+A primeira tentativa (`40877225614`) compilou, mas falhou por ordem incorreta de argumentos em `lipo -verify_arch`; corrigida antes da execução aprovada acima. O código Swift não mudou nesta etapa: testes de simulador continuam referenciados na execução aprovada abaixo. Execuções duplicadas de simulador por sincronização do PR foram canceladas para economizar minutos.
+
+**Não houve assinatura Apple nem teste de importação, assinatura ou instalação em SideStore/AltStore/outro assinador ou em iPhone físico.** A ferramenta externa precisa estar instalada/configurada e assinar app, extensão e frameworks com identidade/perfis válidos. O download por Safari não executa essa assinatura. Publicação ReplayKit continua pendente.
+
+---
+
 # Validação da continuação iOS — 29/10/2026
 
 Branch: `ios-native-preparation`. Código nativo final em `def8a56`; ajuste de CI com boot/timeout em `cd562a2`. Os commits posteriores de relatório não alteram código compilado.

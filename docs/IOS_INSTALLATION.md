@@ -1,6 +1,14 @@
 # Instalar o Nexoo tendo somente um iPhone
 
-Pesquisa em fontes oficiais em 29/10/2026. Não houve teste de instalação física, assinatura válida ou emissão de IPA nesta sessão. Não fornecer senha Apple, chave privada, certificados ou arquivos de pareamento em issues, chat, commits ou logs.
+Pesquisa em fontes oficiais em 29/10/2026. Não houve teste de instalação física nem assinatura Apple válida nesta sessão. Um IPA de dispositivo sem assinatura pode ser produzido separadamente para importação em um assinador; isso não o torna diretamente instalável. Não fornecer senha Apple, chave privada, certificados ou arquivos de pareamento em issues, chat, commits ou logs.
+
+## IPA para assinar durante a importação
+
+Sim: o CI pode compilar para **iphoneos/arm64**, empacotar `Payload/Nexoo.app` com extensão/frameworks em `.ipa` e entregar esse arquivo sem assinatura. O workflow é `.github/workflows/ios-unsigned-device.yml`; o resultado se chama `Nexoo-resign-required.ipa`. Consulte a execução e o resultado real em `../ios/VALIDATION.md`.
+
+O fluxo pretendido é: baixar o artefato, extrair o ZIP do GitHub para obter o `.ipa`, importar no assinador já configurado, e deixar **esse assinador** criar/aplicar identidade e perfis e instalar o app. Ele deve assinar também a extensão ReplayKit e os frameworks, preservando/ajustando IDs de forma compatível. Apenas abrir o link no Safari ou ter uma Conta Apple gratuita não executa essa assinatura automaticamente. Uma conta gratuita pode impor limites de App IDs/extensões e renovação.
+
+A instalação deste pacote em SideStore, AltStore Classic ou outro assinador ainda não foi testada. Um assinador que exige certificado próprio continua exigindo esse certificado. PAL não é importador de IPA arbitrário: notarização/distribuição alternativa é outro fluxo. Se o usuário ainda não tem um assinador funcional instalado, permanece o problema de preparar essa ferramenta inicialmente descrito abaixo.
 
 ## Situação concreta
 
