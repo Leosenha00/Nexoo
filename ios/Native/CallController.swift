@@ -17,7 +17,11 @@ final class CallController: NSObject, ObservableObject {
     private let api: APIClient
     private var manager: SocketManager?
     private var socket: SocketIOClient? { manager?.defaultSocket }
-    private let factory = RTCPeerConnectionFactory(encoderFactory: RTCDefaultVideoEncoderFactory(), decoderFactory: RTCDefaultVideoDecoderFactory())
+    private static let sharedFactory: RTCPeerConnectionFactory = {
+        RTCInitializeSSL()
+        return RTCPeerConnectionFactory(encoderFactory: RTCDefaultVideoEncoderFactory(), decoderFactory: RTCDefaultVideoDecoderFactory())
+    }()
+    private let factory = CallController.sharedFactory
     private var peer: RTCPeerConnection?
     private var capturer: RTCCameraVideoCapturer?
     private var localAudio: RTCAudioTrack?
