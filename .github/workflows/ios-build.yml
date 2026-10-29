@@ -32,14 +32,18 @@ jobs:
           set -o pipefail
           xcodebuild -project ios/Nexoo.xcodeproj -scheme Nexoo -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath ios/DerivedData CODE_SIGNING_ALLOWED=NO build 2>&1 | tee ios/results/build.log
       - name: Unit and UI tests
+        timeout-minutes: 10
         shell: bash
         run: |
           set -o pipefail
           DEVICE_ID=$(xcrun simctl list devices available -j | python3 -c 'import json,sys; d=json.load(sys.stdin); print(next(x["udid"] for devices in d["devices"].values() for x in devices if x["name"].startswith("iPhone")))')
-          xcodebuild -project ios/Nexoo.xcodeproj -scheme Nexoo -configuration Debug -destination "platform=iOS Simulator,id=$DEVICE_ID" -derivedDataPath ios/DerivedData -resultBundlePath ios/results/Tests.xcresult CODE_SIGNING_ALLOWED=NO test 2>&1 | tee ios/results/test.log
+          xcrun simctl boot "$DEVICE_ID" || true
+          python3 -c 'import subprocess,sys; subprocess.run(["xcrun", "simctl", "bootstatus", sys.argv[1], "-b"], check=True, timeout=180)' "$DEVICE_ID"
+          xcodebuild -parallel-testing-enabled NO -test-timeouts-enabled YES -default-test-execution-time-allowance 60 -maximum-test-execution-time-allowance 120 -project ios/Nexoo.xcodeproj -scheme Nexoo -configuration Debug -destination "platform=iOS Simulator,id=$DEVICE_ID" -derivedDataPath ios/DerivedData -resultBundlePath ios/results/Tests.xcresult CODE_SIGNING_ALLOWED=NO test 2>&1 | tee ios/results/test.log
       - name: Diagnose failure
         if: failure()
         run: |
+          xcrun simctl list devices > ios/results/simulators.log
           python3 ios/scripts/diagnose.py >> "$GITHUB_STEP_SUMMARY"
       - name: Save generated project
         if: always()
